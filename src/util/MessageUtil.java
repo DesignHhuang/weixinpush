@@ -27,7 +27,10 @@ public class MessageUtil
     public static final String RESP_MESSAGE_TYPE_TEXT = "text";  
     public static final String RESP_MESSAGE_TYPE_NEWS = "news";  
     public static final String REQ_MESSAGE_TYPE_TEXT = "text";  
-    public static final String REQ_MESSAGE_TYPE_IMAGE = "image"; 
+    public static final String REQ_MESSAGE_TYPE_IMAGE = "image";
+	public static final String REQ_MESSAGE_TYPE_EVENT = "event";
+	public static final String EVENT_TYPE_SUBSCRIBE = "subscribe";
+	public static final String EVENT_TYPE_UNSUBSCRIBE = "unsubscribe"; 
     @SuppressWarnings("unchecked") 
     public static Map<String, String> parseXml(HttpServletRequest request) throws Exception
     {  

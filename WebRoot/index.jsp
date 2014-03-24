@@ -34,6 +34,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
         ResultSet selectRes = stmt.executeQuery(selectSql);
         while (selectRes.next())
         { 
+        	
         	String req = selectRes.getString("request");
            	String resp = selectRes.getString("response");
             Date reqtime = selectRes.getDate("reqtime");
