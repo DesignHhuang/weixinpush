@@ -19,10 +19,16 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 	<meta http-equiv="expires" content="0">    
 	<meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
 	<meta http-equiv="description" content="This is my page">
+	<style type="text/css">
+		.right{margin-left:665px;}
+ 		.left{width:665px;float:left;border-style: solid;border-color:white;border-right-color: black;}
+  	</style>
   </head>
   
   <body>
-  <%
+  <div>
+  <div class="left">
+       <%
 	try 
 	{
    		Connection con = null; 
@@ -49,5 +55,35 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 		System.out.print("MYSQL");
    	}
   %>
+  </div>
+   <div class="right">
+       <%
+	try 
+	{
+   		Connection con = null; 
+   		Class.forName("com.mysql.jdbc.Driver").newInstance(); 
+    	con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/push", "push", "push");
+    	Statement stmt; 
+    	stmt = con.createStatement();
+      	String selectSql = "SELECT * FROM user";
+        ResultSet selectWel = stmt.executeQuery(selectSql);
+        while (selectWel.next())
+        { 
+        	String username = selectWel.getString("username");
+           	String wel = selectWel.getString("huifu");
+            out.write("<strong><font color=red>用户open_ID:</font></strong>"+username);
+            out.write("</br>");
+            out.write(wel);
+            out.write("</br>");
+       	}
+	} 
+   	catch (Exception e) 
+   	{
+		System.out.print("MYSQL");
+   	}
+  %>
+   </div>
+ </div>
+
   </body>
 </html>
