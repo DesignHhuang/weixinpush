@@ -277,14 +277,14 @@ public class CoreService {
 	                    Article article2 = new Article();  
 	                    article2.setTitle("新闻二\n"+newsList.get(1).getTitle());  
 	                    article2.setDescription("");  
-	                    article2.setPicUrl("http://i0.sinaimg.cn/dy/w/2014-03-30/1396135380_AhH08i.jpg");  
+	                    article2.setPicUrl("http://i0.sinaimg.cn/IT/2014/0330/U4672P2DT20140330113904.jpg");  
 	                    article2.setUrl(newsList.get(1).getUrl());  
 	                    String str2 = article2.getPicUrl();
 	                    String strT2 = article2.getTitle();
 	                    Article article3 = new Article();  
 	                    article3.setTitle("新闻三\n"+newsList.get(2).getTitle());  
 	                    article3.setDescription("");  
-	                    article3.setPicUrl("http://upload.techweb.com.cn/2014/0329/1396065335993.jpg");  
+	                    article3.setPicUrl("http://i1.sinaimg.cn/IT/2014/0330/U4672P2DT20140330104231.jpg");  
 	                    article3.setUrl(newsList.get(2).getUrl()); 
 	                    String str3 = article3.getPicUrl();
 	                    String strT3 = article3.getTitle();
