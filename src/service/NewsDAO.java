@@ -12,11 +12,11 @@ import model.News;
 import util.SolrServerClient;
 
 public class NewsDAO {
-	private SolrServer solr = SolrServerClient.getInstance()
+	private static SolrServer solr = SolrServerClient.getInstance()
 			.getServer("news");
 
 
-	public List<News> getNewsByTimeRange(String timeRange)
+	public static List<News> getNewsByTimeRange(String timeRange)
 			throws SolrServerException {
 		SolrQuery parameters = new SolrQuery();
 		parameters.set("q", "*:*");

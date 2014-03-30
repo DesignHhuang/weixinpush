@@ -22,6 +22,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 	<style type="text/css">
 		.right{margin-left:665px;}
  		.left{width:665px;float:left;border-style: solid;border-color:white;border-right-color: black;}
+ 		.right .button{float:button;border-style: solid;border-color:white;border-top-color: black;}
   	</style>
   </head>
   
@@ -57,6 +58,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
   %>
   </div>
    <div class="right">
+   <div class="top">
        <%
 	try 
 	{
@@ -82,6 +84,37 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 		System.out.print("MYSQL");
    	}
   %>
+  </div>
+  <div class="button">
+        <%
+	try 
+	{
+   		Connection con = null; 
+   		Class.forName("com.mysql.jdbc.Driver").newInstance(); 
+    	con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/push", "push", "push");
+    	Statement stmt; 
+    	stmt = con.createStatement();
+      	String selectSql = "SELECT * FROM pic";
+        ResultSet selectpic = stmt.executeQuery(selectSql);
+        while (selectpic.next())
+        { 
+        	String req = selectpic.getString("request");
+        	String picurl = selectpic.getString("picurl");
+           	String resp = selectpic.getString("response");
+           	Date reqtime = selectpic.getDate("reqtime");
+           	out.write("<strong><font color=red>请求:</font></strong>"+req+"。<strong><font color=red>时间:</font></strong>"+reqtime);
+            out.write("</br>");
+            out.write("<strong><font color=blue>图片地址:</font></strong>"+"</br>"+picurl);
+            out.write("<strong><font color=blue>内容：</font></strong>"+resp);
+            out.write("</br>");
+       	}
+	} 
+   	catch (Exception e) 
+   	{
+		System.out.print("MYSQL");
+   	}
+  %>
+  </div>
    </div>
  </div>
 

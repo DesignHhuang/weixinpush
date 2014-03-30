@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.solr.client.solrj.SolrServerException;
 
+import message.resp.Article;
+import message.resp.NewsMessage;
 import message.resp.TextMessage;
 import model.News;
 import model.Paper;
@@ -26,8 +29,11 @@ public class CoreService {
 		buffer.append("您好，请回复数字选择服务：").append("\n\n");
 		buffer.append("10  今日新闻").append("\n");
 		buffer.append("11  昨日新闻").append("\n");
+		buffer.append("12  图片新闻").append("\n");
 		buffer.append("20  最近论文").append("\n");
-		buffer.append("21  今日论文").append("\n\n");
+		buffer.append("21  今日论文").append("\n");
+		buffer.append("30  最近专利").append("\n");
+		buffer.append("31  今日专利").append("\n\n");
 		return buffer.toString();
 	}
 
@@ -37,8 +43,11 @@ public class CoreService {
 		buffer.append("您好，请回复数字选择服务：").append("\n\n").append("</br>");
 		buffer.append("10  今日新闻").append("\n").append("</br>");
 		buffer.append("11  昨日新闻").append("\n").append("</br>");
+		buffer.append("12  图片新闻").append("\n").append("</br>");
 		buffer.append("20  最近论文").append("\n").append("</br>");
-		buffer.append("21  今日论文").append("\n\n").append("</br>");
+		buffer.append("21  今日论文").append("\n").append("</br>");
+		buffer.append("30  最近专利").append("\n").append("</br>");
+		buffer.append("31  今日专利").append("\n\n").append("</br>");
 		return buffer.toString();
 	}
 
@@ -208,16 +217,25 @@ public class CoreService {
 		try {
 			String respContent = "请求处理异常，请稍候尝试！";
 			String respWeb = null;
+			String picurl = null;
+			String resp = null;
 			Map<String, String> requestMap = MessageUtil.parseXml(request);
 			String fromUserName = requestMap.get("FromUserName");
 			String toUserName = requestMap.get("ToUserName");
 			String msgType = requestMap.get("MsgType");
 			TextMessage textMessage = new TextMessage();
+			List<Article> articleList = new ArrayList<Article>();  
 			textMessage.setToUserName(fromUserName);
 			textMessage.setFromUserName(toUserName);
 			textMessage.setCreateTime(new Date().getTime());
 			textMessage.setMsgType(MessageUtil.RESP_MESSAGE_TYPE_TEXT);
 			textMessage.setFuncFlag(0);
+			NewsMessage newsMessage = new NewsMessage();  
+            newsMessage.setToUserName(fromUserName);  
+            newsMessage.setFromUserName(toUserName);  
+            newsMessage.setCreateTime(new Date().getTime());  
+            newsMessage.setMsgType(MessageUtil.RESP_MESSAGE_TYPE_NEWS);  
+            newsMessage.setFuncFlag(0);  
 			SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_TEXT)) 
 			{
@@ -226,23 +244,96 @@ public class CoreService {
 					CoreService strTodayNews = new CoreService();
 					respContent = strTodayNews.getTodayNews();
 					respWeb = strTodayNews.getTodayNewsWeb();
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
 				} else if (reqContent.equals("11")) {
 					CoreService strYesNews = new CoreService();
 					respContent = strYesNews.getYesNews();
 					respWeb = strYesNews.getYesNewsWeb();
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
 				} else if (reqContent.equals("20")) {
 					CoreService strRecPaper = new CoreService();
 					respContent = strRecPaper.getRecPaper();
 					respWeb = strRecPaper.getRecPaperWeb();
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
 				} else if (reqContent.equals("21")) {
 					CoreService strTodayPaper = new CoreService();
 					respContent = strTodayPaper.getTodayPaper();
 					respWeb = strTodayPaper.getTodayPaperWeb();
-				} else {
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
+				} else if (reqContent.equals("12")){   
+					  Article article1 = new Article();  
+	                    List<News> newsList = null;
+	                    newsList = NewsDAO.getNewsByTimeRange(SolrConstant.TODAY);
+						article1.setTitle("新闻一\n"+newsList.get(0).getTitle());  
+	                    article1.setDescription("");  
+	                    article1.setPicUrl("http://i2.sinaimg.cn/IT/2014/0325/U5388P2DT20140325183816.jpg");  
+	                    article1.setUrl(newsList.get(0).getUrl()); 
+	                    String str1 = article1.getPicUrl();
+	                    String strT1 = article1.getTitle();
+	                    Article article2 = new Article();  
+	                    article2.setTitle("新闻二\n"+newsList.get(1).getTitle());  
+	                    article2.setDescription("");  
+	                    article2.setPicUrl("http://i0.sinaimg.cn/dy/w/2014-03-30/1396135380_AhH08i.jpg");  
+	                    article2.setUrl(newsList.get(1).getUrl());  
+	                    String str2 = article2.getPicUrl();
+	                    String strT2 = article2.getTitle();
+	                    Article article3 = new Article();  
+	                    article3.setTitle("新闻三\n"+newsList.get(2).getTitle());  
+	                    article3.setDescription("");  
+	                    article3.setPicUrl("http://upload.techweb.com.cn/2014/0329/1396065335993.jpg");  
+	                    article3.setUrl(newsList.get(2).getUrl()); 
+	                    String str3 = article3.getPicUrl();
+	                    String strT3 = article3.getTitle();
+						articleList.add(article1);  
+	                    articleList.add(article2);  
+	                    articleList.add(article3);  
+	                    picurl =  str1 + "</br>"  + str2+ "</br>" + str3+ "</br>";
+	                    resp = "图片新闻" + "</br>" + strT1 + "</br>"  + strT2+ "</br>" + strT3+ "</br>";
+						newsMessage.setArticleCount(articleList.size());  
+	                    newsMessage.setArticles(articleList);  
+	                    respMessage = MessageUtil.newsMessageToXml(newsMessage);  
+	                   /* Connection con = null;
+	    				Class.forName("com.mysql.jdbc.Driver").newInstance();
+	    				con = DriverManager.getConnection(
+	    						"jdbc:mysql://127.0.0.1:3306/push", "push", "push");
+	    				Statement stmt;
+	    				stmt = con.createStatement();
+	    				stmt.executeUpdate("INSERT INTO pic (picurl, response, reqtime) VALUES ('"
+	    						+ picurl
+	    						+ "', '"
+	    						+ resp
+	    						+ "', '"
+	    						+ time.format(new Date()) + "')");*/
+				}else {
 					CoreService strMainMenu = new CoreService();
 					respContent = strMainMenu.getMainMenu();
 					respWeb = strMainMenu.getMainMenuWeb();
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
 				}
+				if(reqContent.equals("12"))
+				{
+					 Connection con = null;
+	    				Class.forName("com.mysql.jdbc.Driver").newInstance();
+	    				con = DriverManager.getConnection(
+	    						"jdbc:mysql://127.0.0.1:3306/push", "push", "push");
+	    				Statement stmt;
+	    				stmt = con.createStatement();
+	    				stmt.executeUpdate("INSERT INTO pic (request, picurl, response, reqtime) VALUES ('"
+	    						+ reqContent
+	    						+ "', '"
+	    						+ picurl
+	    						+ "', '"
+	    						+ resp
+	    						+ "', '"
+	    						+ time.format(new Date()) + "')");
+				}
+				else
+				{
 				Connection con = null;
 				Class.forName("com.mysql.jdbc.Driver").newInstance();
 				con = DriverManager.getConnection(
@@ -255,6 +346,7 @@ public class CoreService {
 						+ respWeb
 						+ "', '"
 						+ time.format(new Date()) + "')");
+				}
 			} 
 			else if(msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_EVENT))
 			{
@@ -277,13 +369,17 @@ public class CoreService {
 						+ fromUserName 
 						+ "', '"
 						+ respWeb + "')");
+				textMessage.setContent(respContent);
+				respMessage = MessageUtil.textMessageToXml(textMessage);
 			}
 			else if(msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_IMAGE))
 			{
 				respContent = "您发送的是图片！请发送正确的内容。";
+				textMessage.setContent(respContent);
+				respMessage = MessageUtil.textMessageToXml(textMessage);
 			}
-			textMessage.setContent(respContent);
-			respMessage = MessageUtil.textMessageToXml(textMessage);
+			//textMessage.setContent(respContent);
+			//respMessage = MessageUtil.textMessageToXml(textMessage);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
