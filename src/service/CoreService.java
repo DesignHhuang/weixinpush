@@ -193,7 +193,7 @@ public class CoreService {
 	{
 		StringBuffer buffer = new StringBuffer();
 		List<Paper> paperList = solrDAO.getResultsByTimeRange(
-				SolrConstant.TODAY, 0, 5, "papers", Paper.class);
+				SolrConstant.TODAY, 0, 5, "papers", Paper.class); 
 		if (paperList.isEmpty()) {
 			String str = "今日无论文更新！";
 			buffer.append(str).append("</br>");
