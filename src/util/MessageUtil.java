@@ -8,6 +8,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import message.resp.VoiceMessage;
 import message.resp.Article;
 import message.resp.NewsMessage;
 import message.resp.TextMessage;
@@ -30,7 +31,8 @@ public class MessageUtil
     public static final String REQ_MESSAGE_TYPE_IMAGE = "image";
 	public static final String REQ_MESSAGE_TYPE_EVENT = "event";
 	public static final String EVENT_TYPE_SUBSCRIBE = "subscribe";
-	public static final String EVENT_TYPE_UNSUBSCRIBE = "unsubscribe"; 
+	public static final String EVENT_TYPE_UNSUBSCRIBE = "unsubscribe";
+	public static final String REQ_MESSAGE_TYPE_VOICE = "voice"; 
     @SuppressWarnings("unchecked") 
     public static Map<String, String> parseXml(HttpServletRequest request) throws Exception
     {  
@@ -84,5 +86,10 @@ public class MessageUtil
         xstream.alias("xml", newsMessage.getClass());  
         xstream.alias("item", new Article().getClass());  
         return xstream.toXML(newsMessage);  
-    }    
+    }   
+    public static String voiceMessageToXml(VoiceMessage voiceMessage)
+    {
+    	xstream.alias("xml", voiceMessage.getClass());
+    	return xstream.toXML(voiceMessage);
+    }
 }

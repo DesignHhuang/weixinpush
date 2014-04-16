@@ -13,9 +13,12 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.solr.client.solrj.SolrServerException;
 
+
+
 import message.resp.Article;
 import message.resp.NewsMessage;
 import message.resp.TextMessage;
+import message.resp.VoiceMessage;
 import model.News;
 import model.Paper;
 import util.MessageUtil;
@@ -27,6 +30,7 @@ public class CoreService {
 	public String getMainMenu() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("您好，请回复数字选择服务：").append("\n\n");
+		buffer.append("已开通语音服务,试试发送语音消息！").append("\n");
 		buffer.append("10  今日新闻").append("\n");
 		buffer.append("11  昨日新闻").append("\n");
 		buffer.append("12  图片新闻").append("\n");
@@ -36,7 +40,20 @@ public class CoreService {
 		buffer.append("31  今日专利").append("\n\n");
 		return buffer.toString();
 	}
+	
+	public String getSecTodayMenu() //今日新闻的二级菜单
+	{
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("100 语音").append("\n");
+		buffer.append("101 文字").append("\n");
+		return buffer.toString();	
+	}
 
+	public String getTodayNewsVoice() //语音消息
+	{
+		return "读取语音";
+	}
+	
 	public String getMainMenuWeb() // web
 	{
 		StringBuffer buffer = new StringBuffer();
@@ -223,6 +240,7 @@ public class CoreService {
 			String fromUserName = requestMap.get("FromUserName");
 			String toUserName = requestMap.get("ToUserName");
 			String msgType = requestMap.get("MsgType");
+			
 			TextMessage textMessage = new TextMessage();
 			List<Article> articleList = new ArrayList<Article>();  
 			textMessage.setToUserName(fromUserName);
@@ -230,41 +248,83 @@ public class CoreService {
 			textMessage.setCreateTime(new Date().getTime());
 			textMessage.setMsgType(MessageUtil.RESP_MESSAGE_TYPE_TEXT);
 			textMessage.setFuncFlag(0);
+			
 			NewsMessage newsMessage = new NewsMessage();  
             newsMessage.setToUserName(fromUserName);  
             newsMessage.setFromUserName(toUserName);  
             newsMessage.setCreateTime(new Date().getTime());  
             newsMessage.setMsgType(MessageUtil.RESP_MESSAGE_TYPE_NEWS);  
             newsMessage.setFuncFlag(0);  
+            
+            VoiceMessage voiceMessage = new VoiceMessage();
+            voiceMessage.setToUserName(fromUserName);  
+            voiceMessage.setFromUserName(toUserName);  
+            voiceMessage.setCreateTime(new Date().getTime());  
+            voiceMessage.setMsgType(MessageUtil.REQ_MESSAGE_TYPE_VOICE);  
+            voiceMessage.setFuncFlag(2);  
+            
 			SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_TEXT)) 
 			{
 				String reqContent = requestMap.get("Content").trim();
-				if (reqContent.equals("10")) {
-					CoreService strTodayNews = new CoreService();
-					respContent = strTodayNews.getTodayNews();
-					respWeb = strTodayNews.getTodayNewsWeb();
+				if (reqContent.equals("10")||reqContent.equals("今日新闻。")) 
+				{
+					CoreService strSecTodayMenu = new CoreService();
+					respContent = strSecTodayMenu.getSecTodayMenu();
+					respWeb = strSecTodayMenu.getTodayNewsWeb(); //网页
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
-				} else if (reqContent.equals("11")) {
+				} 
+				else if(reqContent.equals("100")) //语音
+				{
+					CoreService strTodayNews = new CoreService();
+					respContent = strTodayNews.getTodayNewsVoice();
+					respWeb = strTodayNews.getTodayNewsWeb(); //网页
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
+				}
+				else if(reqContent.equals("101")) //文字
+				{
+					CoreService strTodayNews = new CoreService();
+					respContent = strTodayNews.getTodayNews();
+					respWeb = strTodayNews.getTodayNewsWeb(); //网页
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
+				}
+				
+				
+				
+				
+				
+				
+				
+				
+				else if (reqContent.equals("11")||reqContent.equals("昨日新闻。")) 
+				{
 					CoreService strYesNews = new CoreService();
 					respContent = strYesNews.getYesNews();
 					respWeb = strYesNews.getYesNewsWeb();
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
-				} else if (reqContent.equals("20")) {
+				} 
+				else if (reqContent.equals("20")||reqContent.equals("最近论文。")) 
+				{
 					CoreService strRecPaper = new CoreService();
 					respContent = strRecPaper.getRecPaper();
 					respWeb = strRecPaper.getRecPaperWeb();
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
-				} else if (reqContent.equals("21")) {
+				}
+				else if (reqContent.equals("21")||reqContent.equals("今日论文。"))
+				{
 					CoreService strTodayPaper = new CoreService();
 					respContent = strTodayPaper.getTodayPaper();
 					respWeb = strTodayPaper.getTodayPaperWeb();
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
-				} else if (reqContent.equals("12")){   
+				} 
+				else if (reqContent.equals("12")||reqContent.equals("图片新闻。"))
+				{   
 					  Article article1 = new Article();  
 	                    List<News> newsList = null;
 	                    newsList = NewsDAO.getNewsByTimeRange(SolrConstant.TODAY);
@@ -308,14 +368,16 @@ public class CoreService {
 	    						+ resp
 	    						+ "', '"
 	    						+ time.format(new Date()) + "')");*/
-				}else {
+				}
+				else 
+				{
 					CoreService strMainMenu = new CoreService();
 					respContent = strMainMenu.getMainMenu();
 					respWeb = strMainMenu.getMainMenuWeb();
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
 				}
-				if(reqContent.equals("12"))
+				if(reqContent.equals("12")||reqContent.equals("图片新闻。"))
 				{
 					 Connection con = null;
 	    				Class.forName("com.mysql.jdbc.Driver").newInstance();
@@ -348,6 +410,13 @@ public class CoreService {
 						+ time.format(new Date()) + "')");
 				}
 			} 
+			else if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_VOICE)) 
+			{  
+				String reqContent = requestMap.get("Recognition").trim();
+				respContent = reqContent; 
+				voiceMessage.setRecognition(respContent);
+				respMessage = MessageUtil.voiceMessageToXml(voiceMessage);
+	        }  
 			else if(msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_EVENT))
 			{
 				String eventType = requestMap.get("Event");

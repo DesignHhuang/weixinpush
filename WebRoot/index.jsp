@@ -37,7 +37,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
     	con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/push", "push", "push");
     	Statement stmt; 
     	stmt = con.createStatement();
-      	String selectSql = "SELECT * FROM log";
+      	String selectSql = "SELECT * FROM log order by id desc";
         ResultSet selectRes = stmt.executeQuery(selectSql);
         while (selectRes.next())
         { 
@@ -67,7 +67,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
     	con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/push", "push", "push");
     	Statement stmt; 
     	stmt = con.createStatement();
-      	String selectSql = "SELECT * FROM user";
+      	String selectSql = "SELECT * FROM user order by id desc";
         ResultSet selectWel = stmt.executeQuery(selectSql);
         while (selectWel.next())
         { 
@@ -94,7 +94,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
     	con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/push", "push", "push");
     	Statement stmt; 
     	stmt = con.createStatement();
-      	String selectSql = "SELECT * FROM pic";
+      	String selectSql = "SELECT * FROM pic order by id desc";
         ResultSet selectpic = stmt.executeQuery(selectSql);
         while (selectpic.next())
         { 
