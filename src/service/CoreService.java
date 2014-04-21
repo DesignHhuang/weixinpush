@@ -55,12 +55,13 @@ public class CoreService {
 		buffer.append("您好，请回复数字选择服务：").append("\n\n");
 		//buffer.append("已开通语音服务,试试发送语音消息！").append("\n");
 		buffer.append("10  最新新闻动态").append("\n");
-		//buffer.append("11  昨日新闻").append("\n");
-		buffer.append("12  图片新闻").append("\n");
+		buffer.append("001  今日新闻").append("\n");
+		buffer.append("011  昨日新闻").append("\n");
+		buffer.append("012  图片新闻").append("\n");
 		buffer.append("20  最新论文动态").append("\n");
-		//buffer.append("21  今日论文").append("\n");
+		buffer.append("002  今日论文").append("\n");
 		buffer.append("30  最新专利动态").append("\n");
-		//buffer.append("31  今日专利").append("\n\n");
+		buffer.append("003  今日专利").append("\n\n");
 		return buffer.toString();
 	}
 	
@@ -91,7 +92,23 @@ public class CoreService {
 		return buffer.toString();
 	}
 
-	public String getTodayNews(String content)
+	public String getTodayNews() throws SolrServerException
+	{
+		StringBuffer buffer = new StringBuffer();
+		List<News> newsList = solrDAO.getResultsByTimeRange(
+				SolrConstant.TODAY, 0, 5, "news", News.class);
+		buffer.append("今日新闻：").append("\n\n");
+		for (int i = 0; i < newsList.size(); i++) {
+			String newstitle = newsList.get(i).getTitle();
+			String newsurl = newsList.get(i).getUrl();
+			Date newsupdatetime = newsList.get(i).getUpdateTime();
+			String str = "<a href=\"" + newsurl + "\">" + newstitle
+					+ "</a>。更新时间：" + newsupdatetime;
+			buffer.append(i + 1).append(".").append(str).append("\n");
+		}
+		return buffer.toString();
+	}
+	public String getRecNews(String content)
 	{
 		StringBuffer buffer = new StringBuffer();
 		List<News> newsList = null;
@@ -409,7 +426,7 @@ public class CoreService {
     						+ time.format(new Date()) + "')");	
 				}
 				
-				else if(reqContent.equals("10")||reqContent.equals("今日新闻。")) 
+				else if(reqContent.equals("10"))//二级菜单 
 				{
 					CoreService strSecTodayMenu = new CoreService();
 					respContent = strSecTodayMenu.getSecTodayMenu();
@@ -427,7 +444,7 @@ public class CoreService {
 				}
 				else if(reqContent.equals("101")) //文字
 				{
-					CoreService strTodayNews = new CoreService();
+					CoreService strRecNews = new CoreService();
 					Connection con = null;
 					Class.forName("com.mysql.jdbc.Driver").newInstance();
 					con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/push", "push", "push");
@@ -437,20 +454,19 @@ public class CoreService {
 					ResultSet selectRes = stmt.executeQuery(selectSql);
 					selectRes.next();
 					String content = selectRes.getString("content");
-					respContent = strTodayNews.getTodayNews(content);
-					respWeb = strTodayNews.getTodayNewsWeb(); //网页
+					respContent = strRecNews.getRecNews(content);
+					respWeb = strRecNews.getTodayNewsWeb(); //网页
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
 				}
-				
-				
-				
-				
-				
-				
-				
-				
-				else if (reqContent.equals("11")||reqContent.equals("昨日新闻。")) 
+				else if(reqContent.equals("001")||reqContent.equals("今日新闻。"))//今日新闻
+				{
+					CoreService strTodayNews = new CoreService();
+					respContent = strTodayNews.getTodayNews();
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
+				}
+				else if (reqContent.equals("011")||reqContent.equals("昨日新闻。")) //昨日新闻
 				{
 					CoreService strYesNews = new CoreService();
 					respContent = strYesNews.getYesNews();
@@ -458,7 +474,7 @@ public class CoreService {
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
 				} 
-				else if (reqContent.equals("20")||reqContent.equals("最近论文。")) 
+				else if (reqContent.equals("20")||reqContent.equals("最近论文。")) //最新论文动态
 				{
 					CoreService strRecPaper = new CoreService();
 					Connection con = null;
@@ -475,7 +491,7 @@ public class CoreService {
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
 				}
-				else if (reqContent.equals("21")||reqContent.equals("今日论文。"))
+				else if (reqContent.equals("002")||reqContent.equals("今日论文。"))//今日论文
 				{
 					CoreService strTodayPaper = new CoreService();
 					respContent = strTodayPaper.getTodayPaper();
@@ -500,7 +516,7 @@ public class CoreService {
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
 				}
-				else if(reqContent.equals("31")) //今日专利
+				else if(reqContent.equals("003")) //今日专利
 				{
 					CoreService strRecPatent = new CoreService();
 					respContent = strRecPatent.getTodayPatent();
@@ -508,7 +524,7 @@ public class CoreService {
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
 				}
-				else if (reqContent.equals("12")||reqContent.equals("图片新闻。"))
+				else if (reqContent.equals("012")||reqContent.equals("图片新闻。"))
 				{   
 					  Article article1 = new Article();  
 	                    List<News> newsList = null;
@@ -562,7 +578,7 @@ public class CoreService {
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
 				}
-				if(reqContent.equals("12")||reqContent.equals("图片新闻。"))
+				if(reqContent.equals("012")||reqContent.equals("图片新闻。"))
 				{
 					 Connection con = null;
 	    				Class.forName("com.mysql.jdbc.Driver").newInstance();
