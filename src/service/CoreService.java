@@ -2,6 +2,7 @@ package service;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -12,32 +13,54 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.solr.client.solrj.SolrServerException;
-
-
-
 import message.resp.Article;
 import message.resp.NewsMessage;
 import message.resp.TextMessage;
 import message.resp.VoiceMessage;
 import model.News;
 import model.Paper;
+import model.Patent;
 import util.MessageUtil;
 import util.SolrConstant;
 
 public class CoreService {
 	SolrDAOImpl solrDAO = new SolrDAOImpl();
 
+	public String getCustomizeMenu()
+	{
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("您好，请回复数字开始定制：").append("\n\n");
+		buffer.append("0  首次定制").append("\n");
+		buffer.append("1  已经定制").append("\n");
+		buffer.append("2  修改定制").append("\n");
+		buffer.append("已经定制直接回复1。").append("\n\n");
+		return buffer.toString();
+	}
+	
+	public String getFirstCustomize()
+	{
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("您好，请回复“00”+“关注的关键词”。（如：00计算机，00机械）").append("\n\n");
+		return buffer.toString();
+	}
+	public String getchangeCustomize()
+	{
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("您好，请回复“02”+“关注的关键词”来修改订制内容。（如：02计算机，02机械）").append("\n\n");
+		return buffer.toString();
+	}
+	
 	public String getMainMenu() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("您好，请回复数字选择服务：").append("\n\n");
-		buffer.append("已开通语音服务,试试发送语音消息！").append("\n");
-		buffer.append("10  今日新闻").append("\n");
-		buffer.append("11  昨日新闻").append("\n");
+		//buffer.append("已开通语音服务,试试发送语音消息！").append("\n");
+		buffer.append("10  最新新闻动态").append("\n");
+		//buffer.append("11  昨日新闻").append("\n");
 		buffer.append("12  图片新闻").append("\n");
-		buffer.append("20  最近论文").append("\n");
-		buffer.append("21  今日论文").append("\n");
-		buffer.append("30  最近专利").append("\n");
-		buffer.append("31  今日专利").append("\n\n");
+		buffer.append("20  最新论文动态").append("\n");
+		//buffer.append("21  今日论文").append("\n");
+		buffer.append("30  最新专利动态").append("\n");
+		//buffer.append("31  今日专利").append("\n\n");
 		return buffer.toString();
 	}
 	
@@ -68,17 +91,18 @@ public class CoreService {
 		return buffer.toString();
 	}
 
-	public String getTodayNews() {
+	public String getTodayNews(String content)
+	{
 		StringBuffer buffer = new StringBuffer();
 		List<News> newsList = null;
 		try {
-			newsList = solrDAO.getResultsByTimeRange(SolrConstant.TODAY, 0, 5,
+			newsList = solrDAO.getResults(content, 0, 5,
 					"news", News.class);
 		} catch (SolrServerException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		buffer.append("今日新闻：").append("\n\n");
+		buffer.append("关于"+content+"的最新新闻动态：").append("\n\n");
 		for (int i = 0; i < newsList.size(); i++) {
 			String newstitle = newsList.get(i).getTitle();
 			String newsurl = newsList.get(i).getUrl();
@@ -86,6 +110,61 @@ public class CoreService {
 			String str = "<a href=\"" + newsurl + "\">" + newstitle
 					+ "</a>。更新时间：" + newsupdatetime;
 			buffer.append(i + 1).append(".").append(str).append("\n");
+		}
+		return buffer.toString();
+	}
+
+	public String getRecPatent(String content)
+	{
+		StringBuffer buffer = new StringBuffer();
+		List<Patent> patentList = null;
+		try {
+			patentList = solrDAO.getResults(content, 0, 5,
+					"patent", Patent.class);
+		} catch (SolrServerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		buffer.append("关于"+content+"的最新专利动态：").append("\n\n");
+		for (int i = 0; i < patentList.size(); i++) {
+			String patenttitle = patentList.get(i).getTitle();
+			List<String> patentinventor = patentList.get(i).getInventor();
+			List<String> patentapplicant = patentList.get(i).getApplicant();
+			String patentabstract = patentList.get(i).getAbstract();
+			Date newsupdatetime = patentList.get(i).getUpdateTime();
+			String str = "标题：" + patenttitle
+					+"。发明者：" + patentinventor
+					+"。申请者：" + patentapplicant
+					+ "。摘要：" + patentabstract
+					+ "</a>。更新时间：" + newsupdatetime;
+			buffer.append(i + 1).append(".").append(str).append("\n");
+		}
+		return buffer.toString();
+	}
+	
+	public String getTodayPatent() throws SolrServerException 
+	{
+		StringBuffer buffer = new StringBuffer();
+		List<Patent> patentList = solrDAO.getResultsByTimeRange(
+				SolrConstant.TODAY, 0, 5, "patent", Patent.class);
+		if (patentList.isEmpty()) {
+			String str = "今日无专利更新！";
+			buffer.append(str);
+		} else {
+			buffer.append("今日专利：").append("\n\n");
+			for (int i = 0; i < patentList.size(); i++) {
+				String patenttitle = patentList.get(i).getTitle();
+				List<String> patentinventor = patentList.get(i).getInventor();
+				List<String> patentapplicant = patentList.get(i).getApplicant();
+				String patentabstract = patentList.get(i).getAbstract();
+				Date newsupdatetime = patentList.get(i).getUpdateTime();
+				String str = "标题：" + patenttitle
+						+"发明者：" + patentinventor
+						+"申请者：" + patentapplicant
+						+ "摘要：" + patentabstract
+						+ "</a>。更新时间：" + newsupdatetime;
+				buffer.append(i + 1).append(".").append(str).append("\n");
+			}
 		}
 		return buffer.toString();
 	}
@@ -146,11 +225,11 @@ public class CoreService {
 		return buffer.toString();
 	}
 
-	public String getRecPaper() throws SolrServerException {
+	public String getRecPaper(String content) throws SolrServerException {
 		StringBuffer buffer = new StringBuffer();
-		List<Paper> paperList = solrDAO.getResultsByTimeRange(
-				SolrConstant.YEAR, 0, 5, "papers", Paper.class);
-		buffer.append("最近论文：").append("\n\n");
+		List<Paper> paperList = solrDAO.getResults(
+				content, 0, 5, "papers", Paper.class);
+		buffer.append("关于"+content+"的最新论文动态：").append("\n\n");
 		for (int i = 0; i < paperList.size(); i++) {
 			String papertitle = paperList.get(i).getTitle();
 			List<String> paperauthor = paperList.get(i).getAuthor();
@@ -267,7 +346,70 @@ public class CoreService {
 			if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_TEXT)) 
 			{
 				String reqContent = requestMap.get("Content").trim();
-				if (reqContent.equals("10")||reqContent.equals("今日新闻。")) 
+				if(reqContent.equals("0"))//首次定制
+				{
+					CoreService strgetFirstCustomize = new CoreService();
+					respContent = strgetFirstCustomize.getFirstCustomize();
+					//respWeb = strgetFirstCustomize.getMainMenuWeb();
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
+				}
+				else if(reqContent.startsWith("00"))
+				{
+					String repTran = reqContent.substring(2);
+					respContent = "您所输入的关键词为“" + repTran + "”。已完成定制。输入1可查看定制的信息。";   
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
+					Connection con = null;
+    				Class.forName("com.mysql.jdbc.Driver").newInstance();
+    				con = DriverManager.getConnection(
+    						"jdbc:mysql://127.0.0.1:3306/push", "push", "push");
+    				Statement stmt;
+    				stmt = con.createStatement();
+    				stmt.executeUpdate("INSERT INTO cus (openid, content, reqtime) VALUES ('"
+    						+ fromUserName
+    						+ "', '"
+    						+ repTran
+    						+ "', '"
+    						+ time.format(new Date()) + "')");	
+				}
+				else if(reqContent.equals("1")) //已经定制
+				{
+					CoreService strMainMenu = new CoreService();
+					respContent = strMainMenu.getMainMenu();
+					respWeb = strMainMenu.getMainMenuWeb();
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
+				}
+				else if(reqContent.equals("2"))
+				{
+					CoreService strgetchangeCustomize = new CoreService();
+					respContent = strgetchangeCustomize.getchangeCustomize();
+					//respWeb = strgetFirstCustomize.getMainMenuWeb();
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
+				}
+				else if(reqContent.startsWith("02")) //修改定制 
+				{
+					String repTran = reqContent.substring(2);
+					respContent = "您修改后的关键词为“" + repTran + "”。已完成修改。输入1可查看定制的信息。";   
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
+					Connection con = null;
+    				Class.forName("com.mysql.jdbc.Driver").newInstance();
+    				con = DriverManager.getConnection(
+    						"jdbc:mysql://127.0.0.1:3306/push", "push", "push");
+    				Statement stmt;
+    				stmt = con.createStatement();
+    				stmt.executeUpdate("INSERT INTO cus (openid, content, reqtime) VALUES ('"
+    						+ fromUserName
+    						+ "', '"
+    						+ repTran
+    						+ "', '"
+    						+ time.format(new Date()) + "')");	
+				}
+				
+				else if(reqContent.equals("10")||reqContent.equals("今日新闻。")) 
 				{
 					CoreService strSecTodayMenu = new CoreService();
 					respContent = strSecTodayMenu.getSecTodayMenu();
@@ -286,7 +428,16 @@ public class CoreService {
 				else if(reqContent.equals("101")) //文字
 				{
 					CoreService strTodayNews = new CoreService();
-					respContent = strTodayNews.getTodayNews();
+					Connection con = null;
+					Class.forName("com.mysql.jdbc.Driver").newInstance();
+					con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/push", "push", "push");
+					Statement stmt; //创建声明
+			        stmt = con.createStatement();
+					String selectSql = "SELECT * FROM cus where openid = '"+fromUserName+"' order by id desc " ;  
+					ResultSet selectRes = stmt.executeQuery(selectSql);
+					selectRes.next();
+					String content = selectRes.getString("content");
+					respContent = strTodayNews.getTodayNews(content);
 					respWeb = strTodayNews.getTodayNewsWeb(); //网页
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
@@ -310,8 +461,17 @@ public class CoreService {
 				else if (reqContent.equals("20")||reqContent.equals("最近论文。")) 
 				{
 					CoreService strRecPaper = new CoreService();
-					respContent = strRecPaper.getRecPaper();
-					respWeb = strRecPaper.getRecPaperWeb();
+					Connection con = null;
+					Class.forName("com.mysql.jdbc.Driver").newInstance();
+					con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/push", "push", "push");
+					Statement stmt; //创建声明
+			        stmt = con.createStatement();
+					String selectSql = "SELECT * FROM cus where openid = '"+fromUserName+"'";  
+					ResultSet selectRes = stmt.executeQuery(selectSql);
+					selectRes.next();
+					String content = selectRes.getString("content");
+					respContent = strRecPaper.getRecPaper(content);
+					//respWeb = strRecPaper.getRecPaperWeb();
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
 				}
@@ -323,6 +483,31 @@ public class CoreService {
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
 				} 
+				else if(reqContent.equals("30")) //最近专利
+				{
+					CoreService strRecPatent = new CoreService();
+					Connection con = null;
+					Class.forName("com.mysql.jdbc.Driver").newInstance();
+					con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/push", "push", "push");
+					Statement stmt; //创建声明
+			        stmt = con.createStatement();
+					String selectSql = "SELECT * FROM cus where openid = '"+fromUserName+"'";  
+					ResultSet selectRes = stmt.executeQuery(selectSql);
+					selectRes.next();
+					String content = selectRes.getString("content");
+					respContent = strRecPatent.getRecPatent(content);
+					//respWeb = strRecPatent.getRecPatent();
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
+				}
+				else if(reqContent.equals("31")) //今日专利
+				{
+					CoreService strRecPatent = new CoreService();
+					respContent = strRecPatent.getTodayPatent();
+					respWeb = strRecPatent.getTodayPatent();
+					textMessage.setContent(respContent);
+					respMessage = MessageUtil.textMessageToXml(textMessage);
+				}
 				else if (reqContent.equals("12")||reqContent.equals("图片新闻。"))
 				{   
 					  Article article1 = new Article();  
@@ -371,9 +556,9 @@ public class CoreService {
 				}
 				else 
 				{
-					CoreService strMainMenu = new CoreService();
-					respContent = strMainMenu.getMainMenu();
-					respWeb = strMainMenu.getMainMenuWeb();
+					CoreService strCustomize = new CoreService();
+					respContent = strCustomize.getCustomizeMenu();
+					//respWeb = strSecTodayMenu.getTodayNewsWeb(); //网页
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
 				}
