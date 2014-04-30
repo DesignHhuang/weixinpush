@@ -55,13 +55,13 @@ public class CoreService {
 		buffer.append("您好，请回复数字选择服务：").append("\n\n");
 		//buffer.append("已开通语音服务,试试发送语音消息！").append("\n");
 		buffer.append("10  最新新闻动态").append("\n");
-		buffer.append("001  今日新闻").append("\n");
+		buffer.append("111  今日新闻").append("\n");
 		buffer.append("011  昨日新闻").append("\n");
 		buffer.append("012  图片新闻").append("\n");
 		buffer.append("20  最新论文动态").append("\n");
-		buffer.append("002  今日论文").append("\n");
+		buffer.append("112  今日论文").append("\n");
 		buffer.append("30  最新专利动态").append("\n");
-		buffer.append("003  今日专利").append("\n\n");
+		buffer.append("113  今日专利").append("\n\n");
 		return buffer.toString();
 	}
 	
@@ -97,18 +97,27 @@ public class CoreService {
 		StringBuffer buffer = new StringBuffer();
 		List<News> newsList = solrDAO.getResultsByTimeRange(
 				SolrConstant.TODAY, 0, 5, "news", News.class);
-		buffer.append("今日新闻：").append("\n\n");
-		for (int i = 0; i < newsList.size(); i++) {
-			String newstitle = newsList.get(i).getTitle();
-			String newsurl = newsList.get(i).getUrl();
-			Date newsupdatetime = newsList.get(i).getUpdateTime();
-			String str = "<a href=\"" + newsurl + "\">" + newstitle
+		if(newsList.isEmpty())
+		{
+			String str = "今日无新闻更新！";
+			buffer.append(str);
+		}
+		else
+		{
+			buffer.append("今日新闻：").append("\n\n");
+			for (int i = 0; i < newsList.size(); i++)
+			{
+				String newstitle = newsList.get(i).getTitle();
+				String newsurl = newsList.get(i).getUrl();
+				Date newsupdatetime = newsList.get(i).getUpdateTime();
+				String str = "<a href=\"" + newsurl + "\">" + newstitle
 					+ "</a>。更新时间：" + newsupdatetime;
-			buffer.append(i + 1).append(".").append(str).append("\n");
+				buffer.append(i + 1).append(".").append(str).append("\n");
+			}
 		}
 		return buffer.toString();
 	}
-	public String getRecNews(String content)
+	public String getRecNews(String content)   //获取最新新闻动态的方法，按定制
 	{
 		StringBuffer buffer = new StringBuffer();
 		List<News> newsList = null;
@@ -124,36 +133,47 @@ public class CoreService {
 			String newstitle = newsList.get(i).getTitle();
 			String newsurl = newsList.get(i).getUrl();
 			Date newsupdatetime = newsList.get(i).getUpdateTime();
-			String str = "<a href=\"" + newsurl + "\">" + newstitle
+			String str = "<a href=\" " + newsurl + " \">" + newstitle
 					+ "</a>。更新时间：" + newsupdatetime;
 			buffer.append(i + 1).append(".").append(str).append("\n");
 		}
 		return buffer.toString();
 	}
-
-	public String getRecPatent(String content)
+	
+	public String getRecPatent(String content)  //最新专利信息，按定制
 	{
 		StringBuffer buffer = new StringBuffer();
 		List<Patent> patentList = null;
 		try {
-			patentList = solrDAO.getResults(content, 0, 5,
-					"patent", Patent.class);
+			patentList = solrDAO.getResults(content, 0, 5, "patent", Patent.class);
 		} catch (SolrServerException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		buffer.append("关于"+content+"的最新专利动态：").append("\n\n");
-		for (int i = 0; i < patentList.size(); i++) {
+		for (int i = 0; i < patentList.size(); i++) 
+		{
 			String patenttitle = patentList.get(i).getTitle();
 			List<String> patentinventor = patentList.get(i).getInventor();
 			List<String> patentapplicant = patentList.get(i).getApplicant();
-			String patentabstract = patentList.get(i).getAbstract();
+			//String patentabstract = patentList.get(i).getAbstract();
 			Date newsupdatetime = patentList.get(i).getUpdateTime();
-			String str = "标题：" + patenttitle
-					+"。发明者：" + patentinventor
+			String img = "http://signals.hyit.edu.cn:8888/static/images/mergeimg/%s.jpg";
+			String imageurl = String.format(img, patentList.get(i).getId());
+			/*String str = "<a href=\"" + imageurl + "\">" + patenttitle
+					+"</a>。发明者：" + patentinventor
 					+"。申请者：" + patentapplicant
 					+ "。摘要：" + patentabstract
-					+ "</a>。更新时间：" + newsupdatetime;
+					+ "。更新时间：" + newsupdatetime;
+					
+			String str = "标题：" + patenttitle
+					+ "<a href=\"" + imageurl + "\">。图片</a>"
+					+ "。发明者：" + patentinventor
+					+ "。申请者：" + patentapplicant
+					+ "。摘要：" + patentabstract
+					+ "。更新时间：" + newsupdatetime;*/
+			String s = "标题：%s。<a href=\"%s\">图片</a>。发明者：%s。申请者:%s。更新时间:%s。"; //图片怎么不循环？
+			String str = String.format(s, patenttitle,imageurl+i,patentinventor,patentapplicant,newsupdatetime);		
 			buffer.append(i + 1).append(".").append(str).append("\n");
 		}
 		return buffer.toString();
@@ -164,22 +184,26 @@ public class CoreService {
 		StringBuffer buffer = new StringBuffer();
 		List<Patent> patentList = solrDAO.getResultsByTimeRange(
 				SolrConstant.TODAY, 0, 5, "patent", Patent.class);
-		if (patentList.isEmpty()) {
+		if (patentList.isEmpty()) 
+		{
 			String str = "今日无专利更新！";
 			buffer.append(str);
-		} else {
+		} 
+		else 
+		{
 			buffer.append("今日专利：").append("\n\n");
-			for (int i = 0; i < patentList.size(); i++) {
+			for (int i = 0; i < patentList.size(); i++) 
+			{
 				String patenttitle = patentList.get(i).getTitle();
 				List<String> patentinventor = patentList.get(i).getInventor();
 				List<String> patentapplicant = patentList.get(i).getApplicant();
 				String patentabstract = patentList.get(i).getAbstract();
 				Date newsupdatetime = patentList.get(i).getUpdateTime();
 				String str = "标题：" + patenttitle
-						+"发明者：" + patentinventor
-						+"申请者：" + patentapplicant
-						+ "摘要：" + patentabstract
-						+ "</a>。更新时间：" + newsupdatetime;
+						+"。发明者：" + patentinventor
+						+"。申请者：" + patentapplicant
+						+ "。摘要：" + patentabstract
+						+ "。更新时间：" + newsupdatetime;
 				buffer.append(i + 1).append(".").append(str).append("\n");
 			}
 		}
@@ -197,30 +221,49 @@ public class CoreService {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		buffer.append("今日新闻：").append("\n\n").append("</br>");
-		for (int i = 0; i < newsList.size(); i++) {
-			String newstitle = newsList.get(i).getTitle();
-			String newsurl = newsList.get(i).getUrl();
-			Date newsupdatetime = newsList.get(i).getUpdateTime();
-			String str = "<a href=\"" + newsurl + "\">" + newstitle
+		if(newsList.isEmpty())
+		{
+			String str = "今日无新闻更新！";
+			buffer.append(str);
+		}
+		else
+		{
+			buffer.append("今日新闻：").append("\n\n").append("</br>");
+			for (int i = 0; i < newsList.size(); i++) 
+			{
+				String newstitle = newsList.get(i).getTitle();
+				String newsurl = newsList.get(i).getUrl();
+				Date newsupdatetime = newsList.get(i).getUpdateTime();
+				String str = "<a href=\"" + newsurl + "\">" + newstitle
 					+ "</a>。更新时间：" + newsupdatetime + "</br>";
-			buffer.append(i + 1).append(".").append(str).append("\n");
+				buffer.append(i + 1).append(".").append(str).append("\n");
+			}
 		}
 		return buffer.toString();
 	}
 
-	public String getYesNews() throws SolrServerException {
+	public String getYesNews() throws SolrServerException 
+	{
 		StringBuffer buffer = new StringBuffer();
 		List<News> newsList = solrDAO.getResultsByTimeRange(
 				SolrConstant.YESTERDAY, 0, 5, "news", News.class);
-		buffer.append("昨日新闻：").append("\n\n");
-		for (int i = 0; i < newsList.size(); i++) {
-			String newstitle = newsList.get(i).getTitle();
-			String newsurl = newsList.get(i).getUrl();
-			Date newsupdatetime = newsList.get(i).getUpdateTime();
-			String str = "<a href=\"" + newsurl + "\">" + newstitle
+		if(newsList.isEmpty())
+		{
+			String str = "昨日无新闻更新！";
+			buffer.append(str);
+		}
+		else
+		{
+			buffer.append("昨日新闻：").append("\n\n");
+			for (int i = 0; i < newsList.size(); i++) 
+			{
+				String newstitle = newsList.get(i).getTitle();
+				String newsurl = newsList.get(i).getUrl();
+				Date newsupdatetime = newsList.get(i).getUpdateTime();
+				String str = "<a href=\"" + newsurl + "\">" + newstitle
 					+ "</a>。更新时间：" + newsupdatetime;
-			buffer.append(i + 1).append(".").append(str).append("\n");
+				buffer.append(i + 1).append(".").append(str).append("\n");
+			}
 		}
 		return buffer.toString();
 	}
@@ -230,19 +273,29 @@ public class CoreService {
 		StringBuffer buffer = new StringBuffer();
 		List<News> newsList = solrDAO.getResultsByTimeRange(
 				SolrConstant.YESTERDAY, 0, 5, "news", News.class);
-		buffer.append("昨日新闻：").append("\n\n").append("</br>");
-		for (int i = 0; i < newsList.size(); i++) {
-			String newstitle = newsList.get(i).getTitle();
-			String newsurl = newsList.get(i).getUrl();
-			Date newsupdatetime = newsList.get(i).getUpdateTime();
-			String str = "<a href=\"" + newsurl + "\">" + newstitle
+		if(newsList.isEmpty())
+		{
+			String str = "昨日无新闻更新！";
+			buffer.append(str);
+		}
+		else
+		{
+			buffer.append("昨日新闻：").append("\n\n").append("</br>");
+			for (int i = 0; i < newsList.size(); i++) 
+			{
+				String newstitle = newsList.get(i).getTitle();
+				String newsurl = newsList.get(i).getUrl();
+				Date newsupdatetime = newsList.get(i).getUpdateTime();
+				String str = "<a href=\"" + newsurl + "\">" + newstitle
 					+ "</a>。更新时间：" + newsupdatetime + "</br>";
-			buffer.append(i + 1).append(".").append(str).append("\n");
+				buffer.append(i + 1).append(".").append(str).append("\n");
+			}
 		}
 		return buffer.toString();
 	}
 
-	public String getRecPaper(String content) throws SolrServerException {
+	public String getRecPaper(String content) throws SolrServerException //最新论文信息，按定制
+	{ 
 		StringBuffer buffer = new StringBuffer();
 		List<Paper> paperList = solrDAO.getResults(
 				content, 0, 5, "papers", Paper.class);
@@ -252,8 +305,11 @@ public class CoreService {
 			List<String> paperauthor = paperList.get(i).getAuthor();
 			Date paperupdatetime = paperList.get(i).getUpdateTime();
 			String paperpath = paperList.get(i).getPath();
-			String str = "<a href=\"http://lib.cqvip.com" + paperpath + "\">"
-					+ papertitle + "</a>。作者：" + paperauthor + "。更新时间："
+			String img = "http://signals.hyit.edu.cn:8888/static/images/mergeimg/%s.jpg";
+			String imageurl = String.format(img, paperList.get(i).getId());
+			String str = "<a href=\"http://lib.cqvip.com" + paperpath + "\">" +papertitle+ "</a>"
+					+ "<a href=\"" +imageurl+ "\">图片</a>"
+					+ "。作者：" + paperauthor + "。更新时间："
 					+ paperupdatetime;
 			buffer.append(i + 1).append(".").append(str).append("\n");
 		}
@@ -265,30 +321,44 @@ public class CoreService {
 		StringBuffer buffer = new StringBuffer();
 		List<Paper> paperList = solrDAO.getResultsByTimeRange(
 				SolrConstant.YEAR, 0, 5, "papers", Paper.class);
-		buffer.append("最近论文：").append("\n\n").append("</br>");
-		for (int i = 0; i < paperList.size(); i++) {
-			String papertitle = paperList.get(i).getTitle();
-			List<String> paperauthor = paperList.get(i).getAuthor();
-			Date paperupdatetime = paperList.get(i).getUpdateTime();
-			String paperpath = paperList.get(i).getPath();
-			String str = "<a href=\"http://lib.cqvip.com" + paperpath + "\">"
+		if(paperList.isEmpty())
+		{
+			String str = "最近无论文更新！";
+			buffer.append(str);
+		}
+		else
+		{
+			buffer.append("最近论文：").append("\n\n").append("</br>");
+			for (int i = 0; i < paperList.size(); i++)
+			{
+				String papertitle = paperList.get(i).getTitle();
+				List<String> paperauthor = paperList.get(i).getAuthor();
+				Date paperupdatetime = paperList.get(i).getUpdateTime();
+				String paperpath = paperList.get(i).getPath();
+				String str = "<a href=\"http://lib.cqvip.com" + paperpath + "\">"
 					+ papertitle + "</a>。作者：" + paperauthor + "。更新时间："
 					+ paperupdatetime + "</br>";
-			buffer.append(i + 1).append(".").append(str).append("\n");
+				buffer.append(i + 1).append(".").append(str).append("\n");
+			}
 		}
 		return buffer.toString();
 	}
 
-	public String getTodayPaper() throws SolrServerException {
+	public String getTodayPaper() throws SolrServerException 
+	{
 		StringBuffer buffer = new StringBuffer();
 		List<Paper> paperList = solrDAO.getResultsByTimeRange(
 				SolrConstant.TODAY, 0, 5, "papers", Paper.class);
-		if (paperList.isEmpty()) {
+		if (paperList.isEmpty()) 
+		{
 			String str = "今日无论文更新！";
 			buffer.append(str);
-		} else {
+		} 
+		else 
+		{
 			buffer.append("今日论文：").append("\n\n");
-			for (int i = 0; i < paperList.size(); i++) {
+			for (int i = 0; i < paperList.size(); i++) 
+			{
 				String papertitle = paperList.get(i).getTitle();
 				List<String> paperauthor = paperList.get(i).getAuthor();
 				Date paperupdatetime = paperList.get(i).getUpdateTime();
@@ -459,7 +529,7 @@ public class CoreService {
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
 				}
-				else if(reqContent.equals("001")||reqContent.equals("今日新闻。"))//今日新闻
+				else if(reqContent.equals("111")||reqContent.equals("今日新闻。"))//今日新闻
 				{
 					CoreService strTodayNews = new CoreService();
 					respContent = strTodayNews.getTodayNews();
@@ -482,7 +552,7 @@ public class CoreService {
 					con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/push", "push", "push");
 					Statement stmt; //创建声明
 			        stmt = con.createStatement();
-					String selectSql = "SELECT * FROM cus where openid = '"+fromUserName+"'";  
+					String selectSql = "SELECT * FROM cus where openid = '"+fromUserName+"' order by id desc";  
 					ResultSet selectRes = stmt.executeQuery(selectSql);
 					selectRes.next();
 					String content = selectRes.getString("content");
@@ -491,7 +561,7 @@ public class CoreService {
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
 				}
-				else if (reqContent.equals("002")||reqContent.equals("今日论文。"))//今日论文
+				else if (reqContent.equals("112")||reqContent.equals("今日论文。"))//今日论文
 				{
 					CoreService strTodayPaper = new CoreService();
 					respContent = strTodayPaper.getTodayPaper();
@@ -507,16 +577,17 @@ public class CoreService {
 					con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/push", "push", "push");
 					Statement stmt; //创建声明
 			        stmt = con.createStatement();
-					String selectSql = "SELECT * FROM cus where openid = '"+fromUserName+"'";  
+					String selectSql = "SELECT * FROM cus where openid = '"+fromUserName+"' order by id desc";  
 					ResultSet selectRes = stmt.executeQuery(selectSql);
 					selectRes.next();
 					String content = selectRes.getString("content");
 					respContent = strRecPatent.getRecPatent(content);
 					//respWeb = strRecPatent.getRecPatent();
+					//System.out.println(respContent);
 					textMessage.setContent(respContent);
 					respMessage = MessageUtil.textMessageToXml(textMessage);
 				}
-				else if(reqContent.equals("003")) //今日专利
+				else if(reqContent.equals("113")) //今日专利
 				{
 					CoreService strRecPatent = new CoreService();
 					respContent = strRecPatent.getTodayPatent();
